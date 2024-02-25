@@ -7,6 +7,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Security.Cryptography;
 using System.Windows.Forms;
+using System.Data.Entity.Core.Metadata.Edm;
 
 namespace MyFoodTracker
 {
@@ -100,7 +101,7 @@ namespace MyFoodTracker
         }
         #endregion
 
-        public static void CreateFoodEntry(string food, int mealId, DateTime foodDate)
+        public static void CreateFoodEntry(string food, string mealName, DateTime foodDate)
         {
             var conn = new SQLiteConnection(connString);
             conn.Open();
@@ -108,14 +109,25 @@ namespace MyFoodTracker
 
             cmd.CommandText = "INSERT INTO FOODS (Name, MealId, FoodDate) VALUES (@food, @mealId, @foodDate)";
             cmd.Parameters.AddWithValue("@food", food);
-            cmd.Parameters.AddWithValue("@mealId", mealId);
+            cmd.Parameters.AddWithValue("@mealId", ConvertMealNametoId(mealName));
             cmd.Parameters.AddWithValue("@foodDate", foodDate.ToLocalTime());
 
             cmd.ExecuteNonQuery();
             conn.Close();
 
         }
-        
+        public static int ConvertMealNametoId(string mealName)
+        {
+            var conn = new SQLiteConnection(connString);
+            conn.Open();
+            var cmd = new SQLiteCommand(conn);
+            cmd.CommandText = "SELECT ID from MEALS where Name = @name";
+            cmd.Parameters.AddWithValue("@name", mealName);
+            object res = cmd.ExecuteScalar();
+            //check if the result is not null before converting to int
+            int id = res != null ? Convert.ToInt32(res) : 1 ;
+            return id;
+        }
 
         #region READ
         public static void GetMealList(ComboBox comboBox)
@@ -132,6 +144,27 @@ namespace MyFoodTracker
                 //int id = reader.GetInt32(0); //assuming Id is of type integer
                 string name = reader.GetString(0); //assyming bane us if tyoe string
                 comboBox.Items.Add(new { Name = name });
+
+            }
+            conn.Close();
+        }
+        public static void GetAllFoodList(DataGridView dataGrid)
+        {
+            dataGrid.Rows.Clear();
+            var conn = new SQLiteConnection(connString);
+            conn.Open();
+            var cmd = new SQLiteCommand(conn);
+
+            cmd.CommandText = "SELECT FOODS.Id, FOODS.FoodDate, FOODS.Name, MEALS.Name AS MealName\r\nFROM FOODS\r\nJOIN MEALS ON FOODS.MealId = MEALS.Id ORDER BY FOODDATE ASC";
+            SQLiteDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                int id = reader.GetInt32(0); //assuming Id is of type integer
+                DateTime foodDate = reader.GetDateTime(1);
+                string name = reader.GetString(2); //assyming bane us if tyoe string
+                string mealName = reader.GetString(3);
+                dataGrid.Rows.Insert(0,id,foodDate,name,mealName);
+                
 
             }
             conn.Close();
