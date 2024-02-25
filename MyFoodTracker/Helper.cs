@@ -23,15 +23,17 @@ namespace MyFoodTracker
                 if (!File.Exists(filepath))
                 {
                     SQLiteConnection.CreateFile(filepath);
-                    using (var conn = new SQLiteConnection(connString))
+                    using (var conn = new SQLiteConnection(connString)) //create a connection
                     {
-                        conn.Open();
+                        conn.Open(); //open the connection
 
+                        //create tables qry
                         string createMealTableQry = @"CREATE TABLE IF NOT EXISTS Meals (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL);";
 
                         string createFoodableQry = @"CREATE TABLE IF NOT EXISTS Foods (Id INTEGER PRIMARY KEY AUTOINCREMENT,Name TEXT NOT NULL, MealId INTEGER, FoodDate Date NOT NULL, Foreign Key (MealId) References Meals(Id));";
-                        using (var cmd = new SQLiteCommand(conn))
+                        using (var cmd = new SQLiteCommand(conn)) //create our command 
                         {
+                            //create our actual table and put into our database
                             cmd.CommandText = createFoodableQry;
                             cmd.ExecuteNonQuery();
 
@@ -40,6 +42,7 @@ namespace MyFoodTracker
                         }
                     }
                     AddMealsAutomatically();
+                    CreateFoodAutomatically();
                 }
             }
             catch (Exception ex)
@@ -47,6 +50,7 @@ namespace MyFoodTracker
                 Console.WriteLine($"An error occurred: {ex.Message}");
             }
         }
+        #region Automatic 
         public static void AddMealsAutomatically()
         {
             using (SQLiteConnection conn = new SQLiteConnection(connString))
@@ -57,18 +61,44 @@ namespace MyFoodTracker
                 using (var cmd = new SQLiteCommand(conn))
                 {
 
-                foreach(string meal in meals)
-                {
+                    foreach (string meal in meals)
+                    {
                         cmd.CommandText = @"INSERT INTO MEALS(Name) VALUES(@name)";
                         cmd.Parameters.AddWithValue("@name", meal);
                         cmd.ExecuteNonQuery();
                         cmd.Parameters.Clear();
-                }
+                    }
                 }
 
             }
         }
+        public static void CreateFoodAutomatically()
+        {
+            using (var conn = new SQLiteConnection(connString))
+            {
+                conn.Open();
+                string[] foods = { "apples", "oranges", "sausage" };
+                int[] mealIds = { 0, 2, 3 };
+                int i = 0;
+                using (var cmd = new SQLiteCommand(conn))
+                {
+                    foreach (string food in foods)
+                    {
+                        cmd.CommandText = @"INSERT INTO Foods(Name, MealId, FoodDate) VALUES(@food, @mealId, @foodDate)";
+                        cmd.Parameters.AddWithValue("@food", food);
+                        cmd.Parameters.AddWithValue("@mealId", mealIds[i]);
+                        cmd.Parameters.AddWithValue("@foodDate", DateTime.Now);
+                        cmd.ExecuteNonQuery();
+                        cmd.Parameters.Clear();
+                        i++;
+                    }
 
+                }
+            }
 
+        }
+        #endregion
+
+        
     }
 }
