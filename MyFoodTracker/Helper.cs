@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Data.SQLite;
 using System.IO;
 using System.Security.Cryptography;
+using System.Windows.Forms;
 
 namespace MyFoodTracker
 {
@@ -99,6 +100,43 @@ namespace MyFoodTracker
         }
         #endregion
 
+        public static void CreateFoodEntry(string food, int mealId, DateTime foodDate)
+        {
+            var conn = new SQLiteConnection(connString);
+            conn.Open();
+            var cmd = new SQLiteCommand(conn);
+
+            cmd.CommandText = "INSERT INTO FOODS (Name, MealId, FoodDate) VALUES (@food, @mealId, @foodDate)";
+            cmd.Parameters.AddWithValue("@food", food);
+            cmd.Parameters.AddWithValue("@mealId", mealId);
+            cmd.Parameters.AddWithValue("@foodDate", foodDate.ToLocalTime());
+
+            cmd.ExecuteNonQuery();
+            conn.Close();
+
+        }
         
+
+        #region READ
+        public static void GetMealList(ComboBox comboBox)
+        {
+            comboBox.DisplayMember = "Name";
+            var conn = new SQLiteConnection(connString);
+            conn.Open();
+            var cmd = new SQLiteCommand(conn);
+
+            cmd.CommandText = "SELECT NAME FROM MEALS";
+            SQLiteDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                //int id = reader.GetInt32(0); //assuming Id is of type integer
+                string name = reader.GetString(0); //assyming bane us if tyoe string
+                comboBox.Items.Add(new { Name = name });
+
+            }
+            conn.Close();
+        }
+
+        #endregion
     }
 }

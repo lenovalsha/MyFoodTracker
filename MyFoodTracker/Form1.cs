@@ -15,11 +15,19 @@ namespace MyFoodTracker
         public Form1()
         {
             InitializeComponent();
+            Helper.GetMealList(cmbMeal);
+       
         }
 
         private void dgvData_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
 
+        }
+        
+
+        private void btnCreate_Click(object sender, EventArgs e)
+        {
+            Helper.CreateFoodEntry(txtFood.Text, 1, dtpDate.Value);
         }
     }
 }
