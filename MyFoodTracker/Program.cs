@@ -16,6 +16,7 @@ namespace MyFoodTracker
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            Helper.InitializeDatabase();
             Application.Run(new Form1());
         }
     }
